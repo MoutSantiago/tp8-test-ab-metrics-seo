@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-const ROWS: Variant[] = ['a', 'b']
+const ROWS: Variant[] = ['A', 'B']
 
 export default function BitacoraPage() {
   return (

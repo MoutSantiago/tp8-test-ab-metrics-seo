@@ -34,7 +34,7 @@ export default async function PracticaPage({ searchParams }: PracticaPageProps) 
   const params = await searchParams
   const requested = firstParam(params.preview)
   const preview = isVariant(requested) ? requested : null
-  const variant: Variant = preview ?? 'a'
+  const variant: Variant = preview ?? 'A'
   const copy = VARIANTS[variant]
   const titleLength = characterCount(copy.seoTitle)
   const descriptionLength = characterCount(copy.seoDescription)
@@ -51,10 +51,10 @@ export default async function PracticaPage({ searchParams }: PracticaPageProps) 
       </p>
       <Landing variant={variant} />
       <div className="flex flex-wrap gap-2">
-        <Link href="/practica?preview=a" className="rounded-md border border-border px-3 py-1.5 text-sm">
+        <Link href="/practica?preview=A" className="rounded-md border border-border px-3 py-1.5 text-sm">
           Ver copy A
         </Link>
-        <Link href="/practica?preview=b" className="rounded-md border border-border px-3 py-1.5 text-sm">
+        <Link href="/practica?preview=B" className="rounded-md border border-border px-3 py-1.5 text-sm">
           Ver copy B
         </Link>
         <Link href="/bitacora" className="rounded-md border border-border px-3 py-1.5 text-sm">

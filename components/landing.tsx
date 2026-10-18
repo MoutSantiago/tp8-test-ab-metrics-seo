@@ -10,7 +10,7 @@ export function Landing({ variant }: { variant: Variant }) {
         <div className="flex flex-col gap-4">
           <p className="flex items-center gap-2 font-mono text-[0.7rem] tracking-[0.16em] text-muted-foreground uppercase">
             <span
-              className={`size-2 rounded-full ${variant === 'a' ? 'bg-experiment-a' : 'bg-experiment-b'}`}
+              className={`size-2 rounded-full ${variant === 'A' ? 'bg-experiment-a' : 'bg-experiment-b'}`}
               aria-hidden
             />
             Taller Norte · copy {variant.toUpperCase()} · {copy.name}
