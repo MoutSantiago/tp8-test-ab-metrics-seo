@@ -24,12 +24,9 @@ const mono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: {
-    default: 'Esqueleto',
-    template: '%s · Laboratorio 01',
-  },
+  title: 'Esqueleto',
   description: 'Punto de partida del laboratorio 01. El copy y el caso de prueba están. El mecanismo, no.',
-  robots: { index: false, follow: false },
+  ...(process.env.SITE_URL ? { metadataBase: process.env.SITE_URL } : {}),
 }
 
 export const viewport: Viewport = {
