@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-taller_norte}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_esta_contrasena}
+      POSTGRES_DB: ${POSTGRES_DB:-taller_norte_db}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"${POSTGRES_USER:-taller_norte}\" -d \"${POSTGRES_DB:-taller_norte_db}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-taller_norte}:${POSTGRES_PASSWORD:-cambiar_esta_contrasena}@db:5432/${POSTGRES_DB:-taller_norte_db}
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:

@@ -1,4 +1,4 @@
-export type Variant = 'a' | 'b'
+export type Variant = 'A' | 'B'
 
 export type VariantStats = {
   impressions: number
@@ -29,8 +29,8 @@ export const OFFER = [
 ] as const
 
 export const VARIANTS = {
-  a: {
-    id: 'a',
+  A: {
+    id: 'A',
     name: 'Control',
     seoTitle: 'Cursos de oficio en ocho semanas, con salida laboral',
     seoDescription:
@@ -40,8 +40,8 @@ export const VARIANTS = {
     lede: 'La práctica empieza en la primera clase. El mensaje de esta variante habla del método, no de la escasez.',
     cta: 'Ver cupos de abril',
   },
-  b: {
-    id: 'b',
+  B: {
+    id: 'B',
     name: 'Tratamiento',
     seoTitle: 'Abril abre cupos: cursos de oficio en grupos de 12',
     seoDescription:
@@ -54,36 +54,146 @@ export const VARIANTS = {
 } as const
 
 export const TEST_CASE: ExperimentLog = {
-  a: { impressions: 240, conversions: 18 },
-  b: { impressions: 236, conversions: 31 },
+  A: { impressions: 240, conversions: 18 },
+  B: { impressions: 236, conversions: 31 },
 }
 
 export const HASH_EXAMPLE_ID = 'lab-visitor-demo-01'
 
-export function isVariant(value: string | null | undefined): value is Variant {
-  return value === 'a' || value === 'b'
+/**
+ * Función de hash FNV-1a de 32 bits.
+ *
+ * Es una función hash no criptográfica, rápida y determinística: dado el mismo
+ * string de entrada siempre devuelve el mismo número. Por eso es apta para
+ * asignar variantes de forma estable sin sorteos ni estado.
+ *
+ * @param input - string a hashear (ej. id de visitante)
+ * @returns número entero sin signo de 32 bits
+ */
+function fnv1a32(input: string): number {
+  let hash = 2166136261 >>> 0 // offset basis FNV-1a 32 bits
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619) >>> 0 // primo FNV-1a 32 bits, wrapping
+  }
+  return hash >>> 0
+}
+
+/**
+ * Asigna una variante de forma determinística a partir del id de visitante.
+ * El mismo id siempre devuelve la misma variante (A o B).
+ *
+ * @param visitorId - identificador del visitante
+ * @returns 'A' (control) o 'B' (tratamiento)
+ */
+export function assignVariant(visitorId: string): Variant {
+  const hash = fnv1a32(visitorId)
+  return hash % 2 === 0 ? 'A' : 'B'
+}
+
+/**
+ * Calcula la tasa de conversión: conversiones / impresiones.
+ * Devuelve null si no hay impresiones (nunca 0, porque sin impresiones no hay tasa).
+ *
+ * @param impressions - cantidad de impresiones
+ * @param conversions - cantidad de conversiones
+ * @returns tasa como decimal (ej. 0.075) o null si no hay impresiones
+ */
+export function computeRate(impressions: number, conversions: number): number | null {
+  if (impressions <= 0) return null
+  return conversions / impressions
+}
+
+/**
+ * Formatea una tasa como porcentaje con dos decimales y coma decimal.
+ * Ejemplo: 0.075 → "7,50%". Si es null devuelve "Pendiente".
+ *
+ * @param rate - tasa decimal o null
+ * @returns string formateado
+ */
+export function formatPercent(rate: number | null): string {
+  if (rate === null) return 'Pendiente'
+  return `${(rate * 100).toFixed(2).replace('.', ',')}%`
+}
+
+/**
+ * Calcula la diferencia de tasas en puntos porcentuales (B - A).
+ * Devuelve null si alguna tasa es null. Redondeado a 2 decimales.
+ *
+ * @param rateA - tasa del control
+ * @param rateB - tasa del tratamiento
+ * @returns diferencia en pp o null
+ */
+export function diffInPp(rateA: number | null, rateB: number | null): number | null {
+  if (rateA === null || rateB === null) return null
+  return Math.round((rateB - rateA) * 100 * 100) / 100
+}
+
+/**
+ * Formatea una diferencia en puntos porcentuales con coma decimal.
+ * Ejemplo: 5.64 → "5,64 pp". Si es null devuelve "Pendiente".
+ *
+ * @param value - diferencia en pp o null
+ * @returns string formateado
+ */
+export function formatDiffInPp(value: number | null): string {
+  if (value === null) return 'Pendiente'
+  return `${value.toFixed(2).replace('.', ',')} pp`
+}
+
+/**
+ * Valida que un valor sea una variante conocida ('A' o 'B').
+ * Nada de lo que viene de cookies o de la base se usa sin validar con esta función.
+ *
+ * @param x - valor a validar
+ * @returns true si es 'A' o 'B'
+ */
+export function isVariant(x: unknown): x is Variant {
+  return x === 'A' || x === 'B'
+}
+
+/**
+ * Valida y devuelve un id de visitante si es un UUID v4 válido, o null en caso contrario.
+ *
+ * @param x - valor a validar
+ * @returns el UUID v4 string o null
+ */
+export function parseVisitorId(x: unknown): string | null {
+  if (typeof x !== 'string') return null
+  const uuidV4Regex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidV4Regex.test(x) ? x : null
+}
+
+/**
+ * Valida que un valor sea un número entero mayor o igual a cero.
+ * Devuelve null si no es un entero válido o es negativo.
+ *
+ * @param x - valor a validar
+ * @returns el número entero o null
+ */
+export function parseCount(x: unknown): number | null {
+  if (typeof x !== 'number' || !Number.isInteger(x) || x < 0) return null
+  return x
 }
 
 export function emptyLog(): ExperimentLog {
   return {
-    a: { impressions: 0, conversions: 0 },
-    b: { impressions: 0, conversions: 0 },
+    A: { impressions: 0, conversions: 0 },
+    B: { impressions: 0, conversions: 0 },
   }
 }
 
-export function assignVariant(_visitorId: string): Variant {
-  // TODO: hash estable. El mismo id tiene que devolver siempre la misma variante.
-  return 'a'
-}
-
+// Mantiene compatibilidad con la firma anterior (conversiones / impresiones).
+// Se prefiere computeRate para código nuevo.
 export function conversionRate(_stats: VariantStats): number | null {
-  // TODO: conversiones / impresiones. Sin impresiones, devolver null, no 0.
+  // TODO: migrar llamadas a computeRate(stats.impressions, stats.conversions)
   return null
 }
 
 export function rateGap(log: ExperimentLog): number | null {
-  const control = conversionRate(log.a)
-  const treatment = conversionRate(log.b)
+  const control = conversionRate(log.A)
+  const treatment = conversionRate(log.B)
   if (control === null || treatment === null) return null
   return (treatment - control) * 100
 }
