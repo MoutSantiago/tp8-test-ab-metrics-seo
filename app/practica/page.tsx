@@ -112,7 +112,7 @@ export default async function PracticaPage({
           ? `Vista previa del copy ${variant.toLowerCase()} (?preview). No se escriben cookies.`
           : `Variante servida: ${variant} (${VARIANTS[variant].name}).`}
       </p>
-      <Landing variant={variant} />
+      <Landing variant={variant} isPreview={isPreview} />
       <div className="flex flex-wrap gap-2">
         <Link href="/practica?preview=A" className="rounded-md border border-border px-3 py-1.5 text-sm">
           Ver copy A

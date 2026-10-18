@@ -1,7 +1,10 @@
 import { Cta } from '@/components/cta'
 import { OFFER, VARIANTS, type Variant } from '@/lib/experiment'
 
-export function Landing({ variant }: { variant: Variant }) {
+export function Landing({
+  variant,
+  isPreview = false,
+}: { variant: Variant; isPreview?: boolean }) {
   const copy = VARIANTS[variant]
 
   return (
@@ -26,7 +29,7 @@ export function Landing({ variant }: { variant: Variant }) {
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">{copy.lede}</p>
         </div>
-        <Cta label={copy.cta} />
+        <Cta label={copy.cta} isPreview={isPreview} />
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
           {OFFER.map((item) => (
             <div key={item.label} className="flex flex-col gap-1">
