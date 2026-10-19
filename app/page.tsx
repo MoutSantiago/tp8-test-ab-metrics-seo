@@ -11,7 +11,7 @@ const FILES = [
   ['lib/experiment.ts', 'Hash, tasa y validación del log. El copy y el caso de prueba ya están.'],
   ['app/practica/page.tsx', 'Publicar title, description y un canonical único.'],
   ['app/practica/actions.ts', 'Una conversión por visitante, solo con el CTA.'],
-  ['app/bitacora/page.tsx', 'Mostrar la tasa. El caso fijo tiene que dar 7,50% y 13,14%.'],
+  ['app/bitacora/page.tsx', 'Mostrar la tasa. El caso fijo debe calcularse por fórmula.'],
 ]
 
 export default function HomePage() {
