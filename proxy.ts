@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { assignVariant, parseVisitorId, isVariant } from '@/lib/experiment'
+import { assignVariant, parseVisitorId, isVariant, type Variant } from '@/lib/experiment'
 import { recordImpression } from '@/lib/events'
 
 const THIRTY_DAYS = 60 * 60 * 24 * 30
@@ -14,6 +14,13 @@ const COOKIE_NAMES = {
 
 function esPreviewParam(value: string | null): boolean {
   return value === 'a' || value === 'A' || value === 'b' || value === 'B'
+}
+
+function normalizePreview(value: string | null): Variant | null {
+  const v = Array.isArray(value) ? value[0] : value
+  if (v === 'a' || v === 'A') return 'A'
+  if (v === 'b' || v === 'B') return 'B'
+  return null
 }
 
 const CRAWLER_UA = [
@@ -78,12 +85,14 @@ export function decide({
   existingVariant,
   sessionId,
   isPreview,
+  previewVariant,
   isCrawler,
 }: {
   visitorId: string | null
   existingVariant: string | null
   sessionId: string | null
   isPreview: boolean
+  previewVariant: Variant | null
   isCrawler: boolean
 }): {
   variant: 'A' | 'B'
@@ -106,9 +115,10 @@ export function decide({
   }
 
   // Preview por query: no toca cookies, no registra impresión.
+  // La variante servida es la del preview (no la asignada), y se propaga por header.
   if (isPreview) {
     return {
-      variant: 'A',
+      variant: previewVariant ?? 'A',
       setVisitor: null,
       setVariant: null,
       setSession: null,
@@ -155,6 +165,7 @@ export async function proxy(request: NextRequest) {
   const userAgent = request.headers.get('user-agent')
   const isCrawler = esCrawler(userAgent)
   const isPreview = esPreviewParam(request.nextUrl.searchParams.get('preview'))
+  const previewVariant = normalizePreview(request.nextUrl.searchParams.get('preview'))
 
   const visitorIdRaw = request.cookies.get(COOKIE_NAMES.visitor)?.value ?? null
   const visitorId = parseVisitorId(visitorIdRaw)
@@ -173,6 +184,7 @@ export async function proxy(request: NextRequest) {
     existingVariant,
     sessionId,
     isPreview,
+    previewVariant,
     isCrawler,
   })
 
