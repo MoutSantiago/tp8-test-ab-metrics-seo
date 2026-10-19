@@ -1,33 +1,63 @@
-# practica-esqueleto-test-ab-metrics-seo
+# Taller Norte — Test A/B + Métricas + SEO (Laboratorio 01)
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Proyecto Next.js 16 + React 19 que implementa un experimento A/B sobre una
+única URL indexable (`/practica`) sin duplicar contenido para motores de
+búsqueda. Una misma persona ve siempre el mismo mensaje; un buscador ve una
+sola URL con un canonical único.
 
-## Built with v0
-
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
-
-[Continue working on v0 →](https://v0.app/chat/projects/prj_doZJN4YzGEwGJ1oaIqLMCknlQsWa)
-
-## Getting Started
-
-First, run the development server:
+## Cómo levantarlo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+cp .env.example .env
+docker compose up --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Esto levanta, en un solo comando:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **db**: PostgreSQL 16 (puerto 5433 en el host, volumen nombrado).
+- **web**: Next.js en producción (puerto 3000 en el host).
 
-## Learn More
+Luego de levantar, accede a:
 
-To learn more, take a look at the following resources:
+- `http://localhost:3000/practica` — landing del experimento.
+- `http://localhost:3000/bitacora` — métricas del experimento.
+- `http://localhost:3000/practica?preview=a` y `?preview=b` — vistas previas
+  de cada copy (no escriben cookies, llevan `noindex`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+## Estructura de archivos
+
+| Archivo                   | Qué hace                                                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `proxy.ts`                | Asigna visitante y variante (`/practica`). Anota una impresión por sesión de 30 min. Propaga la variante efectiva por header `x-variant`. |
+| `lib/experiment.ts`       | Hash estable (FNV-1a 32 bits), tasas, validadores de cookies/base, copy, oferta, caso de prueba fijo, formateadores.                      |
+| `lib/db.ts`               | Pool de conexiones PostgreSQL (`pg`), singleton, sin lógica de negocio.                                                                   |
+| `lib/events.ts`           | `recordImpression`, `recordConversion`, `getCounts`. Valida todo antes de insertar.                                                       |
+| `app/practica/page.tsx`   | Metadatos en el servidor (`generateMetadata`) y landing.                                                                                  |
+| `app/practica/actions.ts` | Server Action de conversión (una por visitante, solo CTA).                                                                                |
+| `app/bitacora/page.tsx`   | Conteos de la base y caso de prueba fijo (tasas por fórmula).                                                                             |
+| `components/landing.tsx`  | Landing con titular, CTA y oferta igual en ambas variantes.                                                                               |
+| `components/cta.tsx`      | Botón CTA con feedback tras el clic.                                                                                                      |
+| `app/layout.tsx`          | Layout raíz, tipografía, `metadataBase` por `SITE_URL`.                                                                                   |
+| `Dockerfile`              | Imagen multi-stage con `output: 'standalone'`, usuario no root.                                                                           |
+| `docker-compose.yml`      | Servicios `db` y `web` con `depends_on` y healthcheck.                                                                                    |
+| `db/init.sql`             | Tablas `impressions` y `conversions`.                                                                                                     |
+| `.env.example`            | Plantilla de variables de entorno (sin valores sensibles).                                                                                |
+
+## Asignación de variante (hash)
+
+Se usa **FNV-1a de 32 bits** sobre el identificador del visitante. Es una función
+hash determinística: el mismo identificador devuelve siempre la misma variante
+(`hash % 2 === 0` → `A`, de lo contrario → `B`).
+
+Prueba de estabilidad con `lab-visitor-demo-01`:
+
+```
+assignVariant('lab-visitor-demo-01') → B
+```
+
+Repetir el cálculo 10 veces devuelve siempre `B`. No hay sorteo en cada render
+ni dependencia de la URL.
+
+## Gestor de paquetes
+
+pnpm (`pnpm dev`, `pnpm build`, `pnpm install`).

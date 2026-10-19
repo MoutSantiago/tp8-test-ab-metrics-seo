@@ -96,7 +96,7 @@ export default async function BitacoraPage() {
         <table className="w-full text-left text-sm">
           <caption className="mb-3 text-left text-muted-foreground">
             Cohorte fija. A: 240 impresiones / 18 conversiones. B: 236 /
-            236 conversiones.
+            31 conversiones.
           </caption>
           <thead>
             <tr className="border-b border-border">
@@ -120,7 +120,7 @@ export default async function BitacoraPage() {
           </tbody>
         </table>
         <p className="font-mono text-sm">
-          B − A = {formatDiffInPp(testCaseDiff)} pp
+          B − A = {formatDiffInPp(testCaseDiff)}
         </p>
       </section>
 
@@ -166,7 +166,7 @@ export default async function BitacoraPage() {
               </tbody>
             </table>
             <p className="font-mono text-sm">
-              B − A = {formatDiffInPp(dbDiff)} pp
+              B − A = {formatDiffInPp(dbDiff)}
             </p>
           </>
         )}
